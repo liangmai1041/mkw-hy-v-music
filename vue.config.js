@@ -3,5 +3,6 @@ module.exports = {
         config.resolve.alias
             .set('src', `${__dirname}/src`)
             .set('common', `${__dirname}/src/common`)
+            .set('components', `${__dirname}/src/components`)
     }
 }
