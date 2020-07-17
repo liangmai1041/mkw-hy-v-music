@@ -7,6 +7,7 @@ module.exports = {
             .set('common', `${__dirname}/src/common`)
             .set('components', `${__dirname}/src/components`)
             .set('api', `${__dirname}/src/api`)
+            .set('base', `${__dirname}/src/base`)
     },
     lintOnSave: false,
     devServer: {
