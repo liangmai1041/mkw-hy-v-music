@@ -14,9 +14,9 @@
                 <div class="recommend-list">
                     <h1 class="list-title">热门歌单推荐</h1>
                     <ul>
-                        <li v-for="(item, index) in discList" :key="index" class="item">
+                        <li v-for="(item, i) in discList" :key="i" class="item">
                             <div class="icon">
-                                <img width="60" height="60" :src="item.imgurl">
+                                <img width="60" height="60" v-lazy="item.imgurl">
                             </div>
                             <div class="text">
                                 <h2 class="name">{{item.creator.name}}</h2>
@@ -26,11 +26,15 @@
                     </ul>
                 </div>
             </div>
+            <div class="loading-container" v-show="!discList.length">
+                <loading></loading>
+            </div>
         </scroll>
     </div>
 </template>
 
 <script>
+import Loading from 'base/loading/loading'
 import Scroll from 'base/scroll/scroll'
 import Slider from 'base/slider/slider'
 import { getRecommend, getDiscList } from 'api/recommend'
@@ -71,7 +75,8 @@ export default {
     },
     components: {
         Slider,
-        Scroll
+        Scroll,
+        Loading
     }
 }
 </script>
