@@ -44,7 +44,7 @@ export function processSongsUrl(songs) {
         return Promise.resolve(songs)
     }
     return getSongsUrl(songs).then((purlMap) => {
-        console.log(purlMap)
+        // console.log(purlMap)
         songs = songs.filter(song => {
             const purl = purlMap[song.mid]
             if (purl) {
