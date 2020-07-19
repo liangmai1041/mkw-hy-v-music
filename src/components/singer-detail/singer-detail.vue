@@ -42,7 +42,7 @@ export default {
                     // 对拿到的歌手详情信息进行处理 拿到我们需要的数据
                     processSongsUrl(this._normalizeSongs(res.data.list)).then(res => {
                         this.songs = res
-                        console.log(this.songs)
+                        // console.log(this.songs)
                     })
                 }
             })
