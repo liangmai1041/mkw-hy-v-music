@@ -7,7 +7,8 @@
         <div class="bg-image" :style="bgStyle" ref="bgImage">
             <div class="filter"></div>
         </div>
-        <scroll :data="songs" class="list" ref="list">
+        <div class="bg-layer" ref="layer"></div>
+        <scroll @scroll="scroll" :probe-type="probeType" :listen-scroll="listenScroll" :data="songs" class="list" ref="list">
             <div class="song-list-wrapper">
                 <song-list :songs="songs"></song-list>
             </div>
@@ -18,6 +19,8 @@
 <script>
 import Scroll from 'base/scroll/scroll'
 import SongList from 'base/song-list/song-list'
+
+const RESERVED_HEIGHT = 40
 
 export default {
     props: {
@@ -36,13 +39,46 @@ export default {
             default: ''
         }
     },
+    data() {
+        return {
+            scrollY: 0
+        }
+    },
     computed: {
         bgStyle() {
             return `background-image:url(${this.bgImage})`
         }
     },
+    created() {
+        this.probeType = 3
+        this.listenScroll = true
+    },
     mounted() {
-        this.$refs.list.$el.style.top = `${this.$refs.bgImage.clientHeight}px`
+        this.imageHeight = this.$refs.bgImage.clientHeight
+        this.minTranslateY = -this.imageHeight + RESERVED_HEIGHT
+        this.$refs.list.$el.style.top = `${this.imageHeight}px`
+    },
+    methods: {
+        scroll(pos){
+            this.scrollY = pos.y
+        }
+    },
+    watch: {
+        scrollY(newY) {
+            let tranlateY = Math.max(this.minTranslateY, newY)
+            let zIndex = 0
+            this.$refs.layer.style['transform'] = `translate3d(0,${tranlateY}px,0)`
+            this.$refs.layer.style['webkitTransform'] = `translate3d(0,${tranlateY}px,0)`
+            if (newY < this.minTranslateY) {
+                zIndex = 10
+                this.$refs.bgImage.style.paddingTop = 0
+                this.$refs.bgImage.style.height = `${RESERVED_HEIGHT}px`
+            } else {
+                this.$refs.bgImage.style.paddingTop = '70%'
+                this.$refs.bgImage.style.height = 0
+            }
+            this.$refs.bgImage.style.zIndex = zIndex
+        }
     },
     components: {
         Scroll,
@@ -122,6 +158,10 @@ export default {
                 width 100%
                 height 100%
                 background rgba(7, 17, 27, 0.4)
+        .bg-layer
+            position relative
+            height 100%
+            background $color-background
         .list
             position absolute
             top 0
