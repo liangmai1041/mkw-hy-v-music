@@ -21,7 +21,7 @@
                     <div class="middle-l">
                         <div class="cd-wrapper" ref="cdWrapper">
                             <div class="cd">
-                                <img class="image" :src="currentSong.image">
+                                <img class="image" :src="currentSong.image" :class="cdCls">
                             </div>
                         </div>
                     </div>
@@ -35,7 +35,7 @@
                             <i class="icon-prev"></i>
                         </div>
                         <div class="icon i-center">
-                            <i class="icon-play"></i>
+                            <i @click="togglePlaying" :class="playIcon"></i>
                         </div>
                         <div class="icon i-right">
                             <i class="icon-next"></i>
@@ -48,19 +48,23 @@
             </div>
         </transition>
         <transition name="mini">
-                <div class="mini-player" v-show="!fullScreen" @click="open">
+            <div class="mini-player" v-show="!fullScreen" @click="open">
                 <div class="icon">
-                    <img width="40" height="40" :src="currentSong.image">
+                    <img width="40" height="40" :src="currentSong.image" :class="cdCls">
                 </div>
                 <div class="text">
                     <h2 class="name">{{currentSong.name}}</h2>
                     <p class="desc">{{currentSong.singer}}</p>
                 </div>
                 <div class="control">
+                    <i @click.stop="togglePlaying" :class="miniIcon"></i>
+                </div>
+                <div class="control">
                     <i class="icon-playlist"></i>
                 </div>
             </div>
         </transition>
+        <audio ref="audio" :src="currentSong.url"></audio>
     </div>
 </template>
 
@@ -74,10 +78,20 @@ const transform = prefixStyle('transform')
 
 export default{
     computed: {
+        playIcon() {
+            return this.playing ? 'icon-pause' : 'icon-play'
+        },
+        miniIcon() {
+            return this.playing ? 'icon-pause-mini' : 'icon-play-mini'
+        },
+        cdCls() {
+            return this.playing ? 'play' : 'play pause'
+        },
         ...mapGetters([
             'fullScreen',
             'playList',
-            'currentSong'
+            'currentSong',
+            'playing'
         ])
     },
     methods: {
@@ -137,6 +151,9 @@ export default{
             this.$refs.cdWrapper.style.transition = ''
             this.$refs.cdWrapper.style[transform] = ''
         },
+        togglePlaying() {
+            this.setPlyingState(!this.playing)
+        },
         // 获取到x,y和scale三个数据
         _getPosAndScale() {
             const targetWidth = 40
@@ -154,8 +171,22 @@ export default{
             }
         },
         ...mapMutations({
-            setFullScreen: 'SET_FULL_SCREEN'
+            setFullScreen: 'SET_FULL_SCREEN',
+            setPlyingState: 'SET_PLAYING_STATE'
         })
+    },
+    watch: {
+        currentSong() {
+            this.$nextTick(() => {
+                this.$refs.audio.play()
+            })
+        },
+        playing(newPlaying) {
+            const audio = this.$refs.audio
+            this.$nextTick(() => {
+                newPlaying ? audio.play() : audio.pause()
+            })
+        }
     }
 }
 </script>
@@ -371,15 +402,21 @@ export default{
                 width 40px
                 height 40px
                 padding 0 10px 0 20px
-                .imgWrapper
-                    height 100%
-                    width 100%
-                    img
-                        border-radius 50%
-                        &.play
-                            animation rotate 10s linear infinite
-                        &.pause
-                            animation-play-state paused
+                // .imgWrapper
+                //     height 100%
+                //     width 100%
+                //     img
+                //         border-radius 50%
+                //         &.play
+                //             animation rotate 10s linear infinite
+                //         &.pause
+                //             animation-play-state paused
+                img
+                    border-radius 50%
+                    &.play
+                        animation rotate 10s linear infinite
+                    &.pause
+                        animation-play-state paused
             .text
                 display flex
                 flex-direction column
