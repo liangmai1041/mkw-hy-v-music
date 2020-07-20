@@ -27,6 +27,13 @@
                     </div>
                 </div>
                 <div class="bottom">
+                    <div class="progress-wrapper">
+                        <span class="time time-l">{{format(currentTime)}}</span>
+                        <div class="progress-bar-wrapper">
+                            <progress-bar :percent="percent" @percentChange="onProgressBarChange"></progress-bar>
+                        </div>
+                        <span class="time time-r">{{format(currentSong.duration)}}</span>
+                    </div>
                     <div class="operators">
                         <div class="icon i-left">
                             <i class="icon-sequence"></i>
@@ -64,7 +71,7 @@
                 </div>
             </div>
         </transition>
-        <audio ref="audio" :src="currentSong.url" @canplay="ready" @error="error"></audio>
+        <audio ref="audio" :src="currentSong.url" @canplay="ready" @error="error" @timeupdate="updataTime"></audio>
     </div>
 </template>
 
@@ -73,13 +80,15 @@ import { mapGetters, mapMutations } from 'vuex'
 // 借助第三方插件库 js创建css动画
 import animations from 'create-keyframe-animation'
 import { prefixStyle } from 'common/js/dom'
+import ProgressBar from 'base/progress-bar/progress-bar'
 
 const transform = prefixStyle('transform')
 
 export default{
     data() {
         return {
-            songReady: false
+            songReady: false,
+            currentTime: 0
         }
     },
     computed: {
@@ -94,6 +103,9 @@ export default{
         },
         disableCls () {
             return this.songReady ? '' : 'disable'
+        },
+        percent() {
+            return this.currentTime / this.currentSong.duration
         },
         ...mapGetters([
             'fullScreen',
@@ -193,6 +205,32 @@ export default{
         error() {
             this.songReady = true
         },
+        updataTime(e) {
+            this.currentTime = e.target.currentTime
+        },
+        format(interval) {
+            //   |0  表示向下取整
+            interval = interval | 0
+            const minute = interval / 60 | 0
+            const second = this._pad(interval % 60)
+            return `${minute}:${second}`
+        },
+        onProgressBarChange(percent) {
+            const currentTime = this.currentSong.duration * percent
+            this.currentTime = this.$refs.audio.currentTime = currentTime
+            // this.$refs.audio.currentTime = percent * this.currentSong.duration
+            if (!this.playing) {
+                this.togglePlaying()
+            }
+        },
+        _pad(num, n = 2){
+            let len = num.toString().length
+            while(len < n) {
+                num = '0' + num
+                len++
+            }
+            return num
+        },
         // 获取到x,y和scale三个数据
         _getPosAndScale() {
             const targetWidth = 40
@@ -227,6 +265,9 @@ export default{
                 newPlaying ? audio.play() : audio.pause()
             })
         }
+    },
+    components: {
+        ProgressBar
     }
 }
 </script>
