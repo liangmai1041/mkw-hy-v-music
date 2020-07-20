@@ -1,62 +1,77 @@
 <template>
     <div class="player" v-show="playList.length>0">
-        <div class="normal-player" v-show="fullScreen"> 
-            <div class="background">
-                <img width="100%" height="100%" :src="currentSong.image">
-            </div>
-            <div class="top">
-                <div class="back" @click="back">
-                    <i class="icon-back"></i>
+        <transition name="normal"
+                    @enter="enter"
+                    @after-enter="afterEnter"
+                    @leave="leave"
+                    @after-leave="afterLeave"
+        >
+            <div class="normal-player" v-show="fullScreen"> 
+                <div class="background">
+                    <img width="100%" height="100%" :src="currentSong.image">
                 </div>
-                <h1 class="title">{{currentSong.name}}</h1>
-                <h2 class="subtitle">{{currentSong.singer}}</h2>
-            </div>
-            <div class="middle">
-                <div class="middle-l">
-                    <div class="cd-wrapper">
-                        <div class="cd">
-                            <img class="image" :src="currentSong.image">
+                <div class="top">
+                    <div class="back" @click="back">
+                        <i class="icon-back"></i>
+                    </div>
+                    <h1 class="title">{{currentSong.name}}</h1>
+                    <h2 class="subtitle">{{currentSong.singer}}</h2>
+                </div>
+                <div class="middle">
+                    <div class="middle-l">
+                        <div class="cd-wrapper" ref="cdWrapper">
+                            <div class="cd">
+                                <img class="image" :src="currentSong.image">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="bottom">
+                    <div class="operators">
+                        <div class="icon i-left">
+                            <i class="icon-sequence"></i>
+                        </div>
+                        <div class="icon i-left">
+                            <i class="icon-prev"></i>
+                        </div>
+                        <div class="icon i-center">
+                            <i class="icon-play"></i>
+                        </div>
+                        <div class="icon i-right">
+                            <i class="icon-next"></i>
+                        </div>
+                        <div class="icon i-right">
+                            <i class="icon icon-not-favorite"></i>
                         </div>
                     </div>
                 </div>
             </div>
-            <div class="bottom">
-                <div class="operators">
-                    <div class="icon i-left">
-                        <i class="icon-sequence"></i>
-                    </div>
-                    <div class="icon i-left">
-                        <i class="icon-prev"></i>
-                    </div>
-                    <div class="icon i-center">
-                        <i class="icon-play"></i>
-                    </div>
-                    <div class="icon i-right">
-                        <i class="icon-next"></i>
-                    </div>
-                    <div class="icon i-right">
-                        <i class="icon icon-not-favorite"></i>
-                    </div>
+        </transition>
+        <transition name="mini">
+                <div class="mini-player" v-show="!fullScreen" @click="open">
+                <div class="icon">
+                    <img width="40" height="40" :src="currentSong.image">
+                </div>
+                <div class="text">
+                    <h2 class="name">{{currentSong.name}}</h2>
+                    <p class="desc">{{currentSong.singer}}</p>
+                </div>
+                <div class="control">
+                    <i class="icon-playlist"></i>
                 </div>
             </div>
-        </div>
-        <div class="mini-player" v-show="!fullScreen" @click="open">
-            <div class="icon">
-                <img width="40" height="40" :src="currentSong.image">
-            </div>
-            <div class="text">
-                <h2 class="name">{{currentSong.name}}</h2>
-                <p class="desc">{{currentSong.singer}}</p>
-            </div>
-            <div class="control">
-                <i class="icon-playlist"></i>
-            </div>
-        </div>
+        </transition>
     </div>
 </template>
 
 <script>
 import { mapGetters, mapMutations } from 'vuex'
+// 借助第三方插件库 js创建css动画
+import animations from 'create-keyframe-animation'
+import { prefixStyle } from 'common/js/dom'
+
+const transform = prefixStyle('transform')
+
 export default{
     computed: {
         ...mapGetters([
@@ -71,6 +86,72 @@ export default{
         },
         open() {
             this.setFullScreen(true)
+        },
+        // 在vue的transition标签中设置js钩子来做动画效果
+        // enter就是从哪来(一定不是当前位置)
+        enter(el, done) {
+            // 获取到位移的坐标和缩放比例
+            const {x, y, scale} = this._getPosAndScale()
+            // 用js 定义动画
+            let animation = {
+                0: {
+                    transform: `translate3d(${x}px, ${y}px, 0) scale(${scale})`
+                },
+                // 到60%的时候就移动到指定位置然后放大1.1
+                60: {
+                    transform: `translate3d(0, 0, 0) scale(1.1)`
+                },
+                100: {
+                    transform: `translate3d(0, 0, 0) scale(1)`
+                }
+            }
+            // 必须要引用第三方插件来让js做动画效果 从而创建css的动画效果
+            animations.registerAnimation({
+                // 动画的名称
+                name: 'move',
+                // 定义的动画
+                animation,
+                // 设置动画的样式 间隔400毫秒 线性的
+                presets: {
+                    duration: 400,
+                    easing: 'linear'
+                }
+            })
+            // 执行动画, 传入要执行动画的dom 动画名称,还有done
+            animations.runAnimation(this.$refs.cdWrapper, 'move', done)
+        },
+        // 在afterEnter中删除动画
+        afterEnter() {
+            animations.unregisterAnimation('move')
+            this.$refs.cdWrapper.style.animation = ''
+        },
+        leave(el, done) {
+            // 获取到位移的坐标和缩放比例
+            const {x, y, scale} = this._getPosAndScale()
+            // 关闭播放器时 cd图片缩小 不做其他动画样式,那就可以直接用js来写
+            this.$refs.cdWrapper.style.transition = 'all 0.4s'
+            this.$refs.cdWrapper.style[transform] = `translate3d(${x}px, ${y}px, 0) scale(${scale})`
+            this.$refs.cdWrapper.addEventListener('transitionend', done)
+        },
+        afterLeave() {
+            this.$refs.cdWrapper.style.transition = ''
+            this.$refs.cdWrapper.style[transform] = ''
+        },
+        // 获取到x,y和scale三个数据
+        _getPosAndScale() {
+            const targetWidth = 40
+            const paddingLeft = 40
+            const paddingBottom = 30
+            const paddingTop = 80
+            const width = window.innerWidth * 0.8
+            const scale = targetWidth / width
+            const x = -(window.innerWidth / 2 - paddingLeft)
+            const y = window.innerHeight - paddingTop - width/2 - paddingBottom
+            return {
+                x,
+                y,
+                scale
+            }
         },
         ...mapMutations({
             setFullScreen: 'SET_FULL_SCREEN'
@@ -104,7 +185,6 @@ export default{
             .top
                 position relative
                 margin-bottom 25px
-
                 .back
                     position absolute
                     top 0
@@ -166,7 +246,6 @@ export default{
                                 border 10px solid rgba(255, 255, 255, 0.1)
                                 &.play
                                     animation rotate 20s linear infinite both
-                                
                                 &.pause
                                     animation-play-state paused
                     .playing-lyric-wrapper
@@ -174,7 +253,6 @@ export default{
                         margin 30px auto 0 auto
                         overflow hidden
                         text-align center
-
                         .playing-lyric
                             height 20px
                             line-height 20px
@@ -186,7 +264,6 @@ export default{
                     width 100%
                     height 100%
                     overflow hidden
-
                     .lyric-wrapper
                         width 80%
                         margin 0 auto
@@ -204,8 +281,6 @@ export default{
                             line-height 32px
                             color $color-text-l
                             font-size $font-size-medium
-                        
-
             .bottom
                 position absolute
                 bottom 50px
