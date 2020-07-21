@@ -14,6 +14,7 @@ module.exports = {
     devServer: {
         port: 8081,
         before(app) {
+            // 代理服务器   向qq音乐接口发送请求抓取轮播图数据
             app.get('/api/getTopBanner', function (req, res) {
                 const url = "https://u.y.qq.com/cgi-bin/musicu.fcg"
                 const jumpPrefix = 'https://y.qq.com/n/yqq/album/'
@@ -51,6 +52,7 @@ module.exports = {
                 })
             })
 
+            // 向qq音乐官网抓取 歌单列表 将获取到的歌单数据返回
             app.get('/api/getDiscList', function (req, res) {
                 const url = 'https://c.y.qq.com/splcloud/fcgi-bin/fcg_get_diss_by_tag.fcg'
                 axios.get(url, {
@@ -66,6 +68,7 @@ module.exports = {
                 })
             })
 
+            // 代理服务器获取歌曲信息
             app.post('/api/getPurlUrl', bodyParser.json(), function (req, res) {
                 const url = 'https://u.y.qq.com/cgi-bin/musicu.fcg'
                 axios.post(url, req.body, {
@@ -79,6 +82,32 @@ module.exports = {
                 }).catch(e => {
                     console.log(e)
                 })
+            })
+
+            // 代理服务器获取歌词信息
+            app.get('/api/lyric', function (req, res) {
+                const url = 'https://c.y.qq.com/lyric/fcgi-bin/fcg_query_lyric_new.fcg'
+
+                axios.get(url, {
+                    headers: {
+                        referer: 'https://c.y.qq.com/',
+                        host: 'c.y.qq.com'
+                    },
+                    params: req.query
+                }).then(response => {
+                    const ret = response.data
+                    // console.log(typeof ret);
+                    // console.log(ret);
+                    if (typeof ret === 'string') {
+                        const reg = /^\w+\(({.+})\)$/
+                        const matches = ret.match(reg)
+                        if (matches) {
+                            ret = JSON.parse(matches[1])
+                        }
+                    }
+                    res.json(ret)
+                }).catch(e => console.log(e))
+
             })
         },
     }

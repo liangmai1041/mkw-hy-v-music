@@ -2,6 +2,27 @@ import { commonParams, ERR_OK } from './config'
 import { getUid } from 'common/js/uid'
 import axios from 'axios'
 
+// 抓取歌词
+export function getLyric(mid) {
+    const url= '/api/lyric'
+
+    const data = Object.assign({}, commonParams, {
+        songmid: mid,
+        pcachetime: +new Date(),
+        platform: 'yqq',
+        hostUin: 0,
+        needNewCode: 0,
+        categoryId: 10000000,
+        format: 'json'
+    })
+
+    return axios.get(url, {
+        params: data
+    }).then(res => {
+        return Promise.resolve(res.data)
+    })
+}
+
 export function getSongsUrl(songs) {
     const url = '/api/getPurlUrl'
 
