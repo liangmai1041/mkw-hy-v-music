@@ -15,6 +15,8 @@ const state = {
     mode: playMode.sequence,
     // 当前播放的索引,有索引和播放列表就可以计算出播放的歌曲,所以不需要直接设置播放的歌曲
     currentIndex: -1,
+    // 歌单信息数据
+    disc: {}
 }
 
 export default state
