@@ -24,6 +24,11 @@ export default {
         listenScroll: {
             type: Boolean,
             default: false
+        },
+        // 是否开启上拉加载
+        pullup: {
+            type: Boolean,
+            default: false
         }
     },
     mounted() {
@@ -45,6 +50,15 @@ export default {
                 let me = this
                 this.scroll.on('scroll', pos => {
                     me.$emit('scroll', pos)
+                })
+            }
+
+            // 如果有页面需要开启下拉加载,那么 监听scrollEnd事件
+            if(this.pullup) {
+                this.scroll.on('scrollEnd', () => {
+                    if(this.scroll.y <= (this.scroll.maxScrollY + 50)) {
+                        this.$emit('scrollToEnd')
+                    }
                 })
             }
         },
