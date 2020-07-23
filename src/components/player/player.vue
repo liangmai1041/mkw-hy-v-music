@@ -111,15 +111,16 @@ import { prefixStyle } from 'common/js/dom'
 import ProgressBar from 'base/progress-bar/progress-bar'
 import ProgressCircle from 'base/progress-circle/progress-circle'
 import { playMode } from 'common/js/config'
-import { shuffle } from 'common/js/util'
 import Lyric from 'lyric-parser'
 import Scroll from 'base/scroll/scroll'
 import Playlist from 'components/playlist/playlist'
+import {playerMixin} from 'common/js/mixin'
 
 const transform = prefixStyle('transform')
 const transitionDuration = prefixStyle('transitionDuration')
 
 export default{
+    mixins: [playerMixin],
     data() {
         return {
             songReady: false,
@@ -146,17 +147,10 @@ export default{
         percent() {
             return this.currentTime / this.currentSong.duration
         },
-        iconMode() {
-            return this.mode === playMode.sequence ? 'icon-sequence' : this.mode === playMode.loop ? 'icon-loop' : 'icon-random'
-        },
         ...mapGetters([
             'fullScreen',
-            'playList',
-            'currentSong',
             'playing',
-            'currentIndex',
-            'mode',
-            'sequenceList'
+            'currentIndex'
         ])
     },
     created() {
@@ -414,11 +408,7 @@ export default{
             }
         },
         ...mapMutations({
-            setFullScreen: 'SET_FULL_SCREEN',
-            setPlyingState: 'SET_PLAYING_STATE',
-            setCurrentIndex: 'SET_CURRENT_INDEX',
-            setPlayMode: 'SET_PLAY_MODE',
-            setPlaylist: 'SET_PLAYLIST'
+            setFullScreen: 'SET_FULL_SCREEN'
         })
     },
     watch: {
