@@ -5,9 +5,11 @@
         ref="suggest" 
         @scrollToEnd="searchMore" 
         :pullup="pullup"
+        :beforeScroll="beforeScroll"
+        @beforeScroll="listScroll"
     >
         <ul class="suggest-list">
-            <li v-for="(item, i) in result" :key="i" class="suggest-item">
+            <li @click="selectItem(item)" v-for="(item, i) in result" :key="i" class="suggest-item">
                 <div class="icon">
                     <i :class="getIconCls(item)"></i>
                 </div>
@@ -17,6 +19,9 @@
             </li>
             <loading v-show="hasMore" title=""></loading>
         </ul>
+        <div v-show="!hasMore && !result.length" class="no-result-wrapper">
+            <no-result title="抱歉，暂无搜索结果"></no-result>
+        </div>
     </scroll>
 </template>
 
@@ -26,6 +31,9 @@ import {ERR_OK} from 'api/config'
 import { createSong, processSongsUrl } from 'common/js/song'
 import Scroll from 'base/scroll/scroll'
 import Loading from 'base/loading/loading'
+import Singer from 'common/js/singer'
+import { mapMutations, mapActions } from 'vuex'
+import NoResult from 'base/no-result/no-result'
 
 const TYPE_SINGER = 'singer'
 const perpage = 20
@@ -46,6 +54,7 @@ export default {
             page: 1,
             result: [],
             pullup: true,
+            beforeScroll:true,
             hasMore: true
         }
     },
@@ -56,8 +65,12 @@ export default {
             this.$refs.suggest.scrollTo(0, 0)
             search(this.query, this.page, this.showSinger, perpage).then(res => {
                 if(res.code === ERR_OK) {
-                    this.result = this._genResult(res.data)
-                    this._checkMore(res.data)
+                    // this.result = this._genResult(res.data)
+                    // this._checkMore(res.data)
+                    this._genResult(res.data).then(result => {
+                        this.result = result
+                        this._checkMore(res.data)
+                    })
                 }
             })
         },
@@ -85,10 +98,27 @@ export default {
                 return `${item.name}-${item.singer}`
             }
         },
+        listScroll() {
+            this.$emit('listScroll')
+        },
         _checkMore(data) {
             const song = data.song
             if(!song.list.length || (song.curnum + (song.curpage-1) * perpage) >= song.totalnum) {
                 this.hasMore = false
+            }
+        },
+        selectItem(item) {
+            if(item.type === TYPE_SINGER) {
+                const singer = new Singer({
+                    id: item.singermid,
+                    name:item.singername
+                })
+                this.$router.push({
+                    path: `/search/${singer.id}`
+                })
+                this.setSinger(singer)
+            }else{
+                this.insertSong(item)
             }
         },
         _genResult(data) {
@@ -96,10 +126,10 @@ export default {
             if(data.zhida && data.zhida.singerid && this.page === 1){
                 ret.push({ ...data.zhida, ...{ type: TYPE_SINGER } })
             }
-            if(data.song) {
-                ret = ret.concat(this._normalizeSongs(data.song.list))
-            }
-            return ret
+            // if
+            return processSongsUrl(this._normalizeSongs(data.song.list)).then(res => {
+                return ret.concat(res)
+            })
         },
         _normalizeSongs(list) {
             const ret = []
@@ -109,7 +139,13 @@ export default {
                 }
             })
             return ret
-        }
+        },
+        ...mapMutations({
+            setSinger: 'SET_SINGER'
+        }),
+        ...mapActions([
+            'insertSong'
+        ])
     },
     watch: {
         query() {
@@ -118,7 +154,8 @@ export default {
     },
     components: {
         Scroll,
-        Loading
+        Loading,
+        NoResult
     }
 }
 </script>
