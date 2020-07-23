@@ -79,8 +79,12 @@ export default {
             this.page++
             search(this.query, this.page, this.showSinger, perpage).then(res => {
                 if(res.code === ERR_OK) {
-                    this.result = this.result.concat(this._genResult(res.data))
-                    this._checkMore(res.data)
+                    // this.result = this.result.concat(this._genResult(res.data))
+                    // this._checkMore(res.data)
+                    this._genResult(res.data).then(result => {
+                        this.result = this.result.concat(result)
+                        this._checkMore(res.data)
+                    })
                 }
             })
         },
@@ -120,6 +124,7 @@ export default {
             }else{
                 this.insertSong(item)
             }
+            this.$emit('select')
         },
         _genResult(data) {
             let ret = []
