@@ -12,7 +12,16 @@
                 <span class="text">随机播放全部</span>
             </div>
             <div class="list-wrapper" ref="listWrapper">
-
+                <scroll ref="favoriteList" class="list-scroll" v-if="currentIndex===0" :data="playHistory">
+                    <div class="list-inner">
+                        <song-list :songs="favoriteList" @select="selectSong"></song-list>
+                    </div>
+                </scroll>
+                <scroll ref="palyList" class="list-scroll" v-if="currentIndex===1" :data="playHistory">
+                    <div class="list-inner">
+                        <song-list :songs="playHistory" @select="selectSong"></song-list>
+                    </div>
+                </scroll>
             </div>
         </div>
     </transition>
@@ -21,6 +30,9 @@
 <script>
 import Switches from 'base/switches/switches'
 import Scroll from 'base/scroll/scroll'
+import SongList from 'base/song-list/song-list'
+import {mapGetters,mapActions} from 'vuex'
+import Song from 'common/js/song'
 
 export default {
     data() {
@@ -32,14 +44,27 @@ export default {
             ]
         }
     },
+    computed: {
+        ...mapGetters([
+            'favoriteList',
+            'playHistory'
+        ])
+    },
     methods: {
         switchItem(index) {
             this.currentIndex = index
         },
+        selectSong(song) {
+            this.insertSong(new Song(song))
+        },
+        ...mapActions([
+            'insertSong'
+        ])
     },
     components: {
         Switches,
-        Scroll
+        Scroll,
+        SongList
     }
 }
 </script>
