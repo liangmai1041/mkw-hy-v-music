@@ -104,7 +104,7 @@
 </template>
 
 <script>
-import { mapGetters, mapMutations } from 'vuex'
+import { mapGetters, mapMutations, mapActions } from 'vuex'
 // 借助第三方插件库 js创建css动画
 import animations from 'create-keyframe-animation'
 import { prefixStyle } from 'common/js/dom'
@@ -267,6 +267,7 @@ export default{
         },
         ready() {
             this.songReady = true
+            this.savePlayHistory(this.currentSong)
         },
         error() {
             this.songReady = true
@@ -409,7 +410,10 @@ export default{
         },
         ...mapMutations({
             setFullScreen: 'SET_FULL_SCREEN'
-        })
+        }),
+        ...mapActions([
+            'savePlayHistory'
+        ])
     },
     watch: {
         currentSong(newSong, oldSong) {
