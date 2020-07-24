@@ -214,7 +214,7 @@ export default{
             this.$refs.cdWrapper.style[transform] = ''
         },
         togglePlaying() {
-            this.setPlyingState(!this.playing)
+            this.setPlayingState(!this.playing)
             if(this.currentLyric) {
                 this.currentLyric.togglePlay()
             }
